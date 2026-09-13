@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Six Day</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap');
+  :root{
+    --bg: #14171a;
+    --panel: #1c2024;
+    --panel-raised: #23282d;
+    --line: #2d3338;
+    --ink: #e9ebec;
+    --ink-dim: #8b939a;
+    --accent: #ff5a36;
+    --accent-ink: #1a0d08;
+    --good: #4caf7d;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overscroll-behavior-y: none;
+  }
+  .mono{font-family:'IBM Plex Mono', monospace;}
+  .wrap{max-width:520px;margin:0 auto;padding:0 0 90px;}
+
+  /* Header */
+  header{padding:26px 18px 14px;}
+  .day-label{font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:.08em;color:var(--accent);font-weight:600;margin-bottom:6px;}
+  h1{font-size:27px;margin:0;font-weight:800;letter-spacing:-0.02em;}
+  .sub{color:var(--ink-dim);font-size:13px;margin-top:4px;}
+
+  /* Day tabs */
+  .tabs{display:flex;gap:6px;padding:0 18px 18px;overflow-x:auto;scrollbar-width:none;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{flex:0 0 auto;padding:8px 14px;border-radius:9px;background:var(--panel);
+    color:var(--ink-dim);font-size:13px;font-weight:600;border:1px solid var(--line);white-space:nowrap;}
+  .tab.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);}
+
+  /* Progress bar */
+  .progress-row{padding:0 18px 20px;display:flex;align-items:center;gap:10px;}
+  .progress-track{flex:1;height:3px;background:var(--panel);border-radius:2px;overflow:hidden;}
+  .progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s ease;}
+  .progress-txt{font-family:'IBM Plex Mono', monospace;font-size:12px;color:var(--ink-dim);font-weight:600;min-width:34px;text-align:right;}
+
+  /* Warmup block */
+  .warmup{margin:0 18px 16px;padding:13px 15px;background:var(--panel);border-radius:10px;border:1px solid var(--line);border-left:2px solid var(--accent);}
+  .warmup-title{font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:.08em;color:var(--accent);font-weight:600;margin-bottom:5px;}
+  .warmup-txt{font-size:13.5px;color:var(--ink);line-height:1.5;}
+
+  /* Exercise card */
+  .ex-card{margin:0 18px 12px;background:var(--panel);border-radius:12px;border:1px solid var(--line);overflow:hidden;}
+  .ex-head{padding:15px 16px 11px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .ex-name{font-size:16px;font-weight:700;letter-spacing:-0.01em;}
+  .ex-tag{font-family:'IBM Plex Mono', monospace;font-size:10px;color:var(--accent);font-weight:600;letter-spacing:.08em;margin-bottom:3px;}
+  .ex-target{font-size:12px;color:var(--ink-dim);margin-top:3px;}
+  .ex-last{font-size:11.5px;color:var(--ink-dim);text-align:right;flex-shrink:0;}
+  .ex-last b{color:var(--ink);font-weight:600;}
+
+  .sets{padding:2px 12px 14px;}
+  .set-row{display:grid;grid-template-columns:22px 1fr 1fr 34px;gap:8px;align-items:center;padding:6px 4px;}
+  .set-num{font-family:'IBM Plex Mono', monospace;font-size:12px;color:var(--ink-dim);font-weight:600;text-align:center;}
+  .stepper{display:flex;align-items:center;background:var(--panel-raised);border-radius:9px;border:1px solid var(--line);}
+  .stepper button{background:none;border:none;color:var(--ink-dim);font-size:16px;width:30px;height:34px;font-weight:600;}
+  .stepper button:active{color:var(--accent);}
+  .stepper input{width:100%;background:none;border:none;color:var(--ink);text-align:center;font-size:14px;font-weight:600;font-family:'IBM Plex Mono', monospace;padding:0;}
+  .stepper input:focus{outline:none;}
+  .check{width:34px;height:34px;border-radius:9px;border:1.5px solid var(--line);background:var(--panel-raised);
+    display:flex;align-items:center;justify-content:center;color:transparent;font-size:15px;font-weight:700;}
+  .check.done{background:var(--good);border-color:var(--good);color:#0d1712;}
+
+  .set-actions{display:flex;gap:8px;padding:8px 4px 2px;}
+  .add-set-btn, .rm-set-btn{flex:1;background:var(--panel-raised);border:1px dashed var(--line);border-radius:9px;
+    color:var(--ink-dim);font-size:12px;font-weight:600;padding:9px;font-family:'Manrope', sans-serif;}
+  .add-set-btn:active{color:var(--accent);border-color:var(--accent);}
+  .rm-set-btn:active{color:#c96a5a;}
+
+  .superset-tag{padding:10px 16px 0;font-size:11.5px;color:var(--ink-dim);font-style:italic;}
+
+  /* Cooldown */
+  .cooldown{margin:18px 18px 0;padding:13px 15px;background:var(--panel);border-radius:10px;border:1px solid var(--line);}
+  .cooldown-title{font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:.08em;color:var(--ink-dim);font-weight:600;margin-bottom:7px;}
+  .cd-item{display:flex;align-items:center;gap:9px;padding:6px 0;font-size:13.5px;}
+  .cd-check{width:17px;height:17px;border-radius:5px;border:1.5px solid var(--line);flex-shrink:0;}
+  .cd-check.done{background:var(--good);border-color:var(--good);}
+  .cd-item.done{color:var(--ink-dim);text-decoration:line-through;}
+
+  .reset-row{padding:22px 18px 0;text-align:center;}
+  .reset-btn{background:none;border:none;color:var(--ink-dim);font-size:12px;padding:8px;}
+
+  footer{position:fixed;bottom:0;left:0;right:0;background:linear-gradient(to top, var(--bg) 65%, transparent);
+    padding:14px 18px 18px;text-align:center;pointer-events:none;}
+  .status-pill{display:inline-block;background:var(--panel-raised);border:1px solid var(--line);border-radius:9px;
+    padding:8px 16px;font-family:'IBM Plex Mono', monospace;font-size:11.5px;color:var(--ink-dim);pointer-events:auto;}
+  .status-pill.saved{color:var(--good);}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<footer><span class="status-pill" id="statusPill">Ready</span></footer>
+
+<script>
+const DAYS = [
+  {
+    id: 1, label: "Day 1", title: "Lower — Power", sub: "Squat, hinge, single-leg",
+    warmup: "5 min: hip circles, bodyweight squats, ankle rocks",
+    exercises: [
+      {name:"Back Squat", tag:"MAIN", target:"4 sets × 5 reps", sets:4},
+      {name:"Romanian Deadlift (DB)", tag:"MAIN", target:"3 sets × 8 reps", sets:3},
+      {name:"Pistol Squat (hand-assisted)", tag:"SKILL", target:"3 sets × 5 / side", sets:3},
+      {name:"Walking Lunge", tag:"SUPERSET", target:"2 sets × 10 / side", sets:2, superLabel:"→ superset with Calf Raise, no rest between"},
+      {name:"Standing Calf Raise", tag:"SUPERSET", target:"2 sets × 15", sets:2},
+    ],
+    cooldown: ["Standing quad stretch — 30s/side","Hamstring stretch — 30s/side","Hip flexor stretch — 30s/side","Child's pose — 45s"]
+  },
+  {
+    id: 2, label: "Day 2", title: "Upper — Power", sub: "Press, pull, dips",
+    warmup: "5 min: band pull-aparts, arm circles, scapular push-ups",
+    exercises: [
+      {name:"Bench Press", tag:"MAIN", target:"4 sets × 6 reps", sets:4},
+      {name:"Weighted Pull-up", tag:"MAIN", target:"4 sets × 6 reps", sets:4},
+      {name:"Dips", tag:"SKILL", target:"3 sets × 6–8 reps", sets:3},
+      {name:"Lateral Raise", tag:"SUPERSET", target:"3 sets × 12 reps", sets:3, superLabel:"→ superset with Face Pull, no rest between"},
+      {name:"Face Pull", tag:"SUPERSET", target:"3 sets × 12 reps", sets:3},
+    ],
+    cooldown: ["Doorway pec stretch — 30s","Overhead triceps/lat stretch — 30s/side","Cross-body shoulder stretch — 30s/side"]
+  },
+  {
+    id: 3, label: "Day 3", title: "Lower — Hypertrophy", sub: "Leg press, curl, archer",
+    warmup: "5 min: hip circles, bodyweight squats, ankle rocks",
+    exercises: [
+      {name:"Leg Press", tag:"MAIN", target:"3 sets × 10 reps", sets:3},
+      {name:"Lying Leg Curl", tag:"MAIN", target:"3 sets × 10 reps", sets:3},
+      {name:"Archer Squat", tag:"SKILL", target:"3 sets × 5 / side", sets:3},
+      {name:"Bulgarian Split Squat", tag:"SUPERSET", target:"2 sets × 8 / side", sets:2, superLabel:"→ superset with Deadbug, no rest between"},
+      {name:"Deadbug", tag:"SUPERSET", target:"2 sets × 12 reps", sets:2},
+    ],
+    cooldown: ["Standing quad stretch — 30s/side","Hamstring stretch — 30s/side","Hip flexor stretch — 30s/side","Child's pose — 45s"]
+  },
+  {
+    id: 4, label: "Day 4", title: "Upper — Hypertrophy", sub: "Incline, row, archer push",
+    warmup: "5 min: band pull-aparts, arm circles, scapular push-ups",
+    exercises: [
+      {name:"Incline DB Press", tag:"MAIN", target:"3 sets × 10 reps", sets:3},
+      {name:"Chest-Supported Row", tag:"MAIN", target:"3 sets × 10 reps", sets:3},
+      {name:"Archer Push-up", tag:"SKILL", target:"3 sets × 6", sets:3},
+      {name:"Cable Curl", tag:"SUPERSET", target:"2 sets × 12 reps", sets:2, superLabel:"→ superset with Triceps Pushdown, no rest between"},
+      {name:"Triceps Pushdown", tag:"SUPERSET", target:"2 sets × 12 reps", sets:2},
+    ],
+    cooldown: ["Doorway pec stretch — 30s","Lat stretch — 30s/side","Cross-body shoulder stretch — 30s/side"]
+  },
+  {
+    id: 5, label: "Day 5", title: "Full Body — Athletic", sub: "Cap day: power + carry",
+    warmup: "5 min: high knees, light bounding, dynamic movement",
+    exercises: [
+      {name:"DB Hang Clean", tag:"MAIN", target:"4 sets × 5 reps", sets:4},
+      {name:"Jump Squat", tag:"MAIN", target:"3 sets × 6 reps", sets:3},
+      {name:"Farmer's Carry", tag:"SKILL", target:"3 rounds × 30–40m", sets:3},
+      {name:"Plank", tag:"SUPERSET", target:"2 sets × 40s", sets:2, superLabel:"→ superset with Side Plank, no rest between"},
+      {name:"Side Plank", tag:"SUPERSET", target:"2 sets × 30s / side", sets:2},
+    ],
+    cooldown: ["Light walk-out — 2–3 min","Gentle hip/ankle shakeout — no deep stretching yet"]
+  },
+  {
+    id: 6, label: "Day 6", title: "Weak Points + Mobility", sub: "Arms, shoulders, forearms",
+    warmup: "None — go straight into lifts",
+    exercises: [
+      {name:"DB Shoulder Press", tag:"MAIN", target:"3 sets × 10 reps", sets:3},
+      {name:"Incline DB Curl", tag:"SUPERSET", target:"2 sets × 12 reps", sets:2, superLabel:"→ superset with Overhead Triceps Extension, no rest between"},
+      {name:"Overhead Triceps Extension", tag:"SUPERSET", target:"2 sets × 12 reps", sets:2},
+      {name:"Farmer's Carry (slow / fat grip)", tag:"GRIP", target:"2 rounds × 20m", sets:2},
+    ],
+    cooldown: ["Hip flexor stretch — 45s/side","90/90 hip opener — 45s/side","Thoracic rotation — 45s/side","Hamstring stretch — 45s/side","Shoulder dislocate holds — 45s ×2","Wrist/forearm stretch — 30s each","Child's pose / cat-cow — 60s"]
+  }
+];
+
+let activeDay = 1;
+let state = {}; // loaded from storage
+
+function keyFor(dayId){ return "workout:day" + dayId; }
+
+function loadDay(dayId){
+  try{
+    const raw = localStorage.getItem(keyFor(dayId));
+    return raw ? JSON.parse(raw) : {};
+  }catch(e){
+    return {};
+  }
+}
+
+function saveDay(dayId, data){
+  try{
+    localStorage.setItem(keyFor(dayId), JSON.stringify(data));
+    setStatus("Saved on this device", true);
+  }catch(e){
+    setStatus("Save failed", false);
+  }
+}
+
+function setStatus(text, saved){
+  const el = document.getElementById('statusPill');
+  el.textContent = text;
+  el.className = "status-pill" + (saved ? " saved" : "");
+}
+
+function emptyExerciseData(sets){
+  return Array.from({length: sets}, () => ({weight:0, reps:0, done:false}));
+}
+
+function render(){
+  const day = DAYS.find(d => d.id === activeDay);
+  const dayState = loadDay(activeDay);
+  state = dayState;
+
+  // ensure structure
+  day.exercises.forEach((ex, i) => {
+    if(!state[i]) state[i] = emptyExerciseData(ex.sets);
+  });
+  if(!state.cooldown) state.cooldown = day.cooldown.map(()=>false);
+
+  const app = document.getElementById('app');
+
+  // total sets & done sets for progress
+  let totalSets = 0, doneSets = 0;
+  day.exercises.forEach((ex,i) => { totalSets += state[i].length; state[i].forEach(s=>{if(s.done) doneSets++;}); });
+  const pct = totalSets ? Math.round((doneSets/totalSets)*100) : 0;
+
+  let html = `
+    <header>
+      <div class="day-label">${day.label.toUpperCase()}</div>
+      <h1>${day.title}</h1>
+      <div class="sub">${day.sub}</div>
+    </header>
+    <div class="tabs">
+      ${DAYS.map(d => `<div class="tab ${d.id===activeDay?'active':''}" data-day="${d.id}">${d.label}</div>`).join('')}
+    </div>
+    <div class="progress-row">
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="progress-txt">${doneSets}/${totalSets}</div>
+    </div>
+    <div class="warmup">
+      <div class="warmup-title">WARM-UP</div>
+      <div class="warmup-txt">${day.warmup}</div>
+    </div>
+  `;
+
+  day.exercises.forEach((ex, i) => {
+    if(ex.superLabel) html += `<div class="superset-tag">${ex.superLabel}</div>`;
+    html += `<div class="ex-card">
+      <div class="ex-head">
+        <div>
+          <div class="ex-tag">${ex.tag}</div>
+          <div class="ex-name">${ex.name}</div>
+          <div class="ex-target">${ex.target}</div>
+        </div>
+      </div>
+      <div class="sets">`;
+    const setCount = state[i].length;
+    for(let s=0; s<setCount; s++){
+      const d = state[i][s];
+      html += `
+        <div class="set-row">
+          <div class="set-num">${s+1}</div>
+          <div class="stepper">
+            <button data-act="dec" data-ex="${i}" data-set="${s}" data-field="weight">–</button>
+            <input inputmode="decimal" data-ex="${i}" data-set="${s}" data-field="weight" value="${d.weight}">
+            <button data-act="inc" data-ex="${i}" data-set="${s}" data-field="weight">+</button>
+          </div>
+          <div class="stepper">
+            <button data-act="dec" data-ex="${i}" data-set="${s}" data-field="reps">–</button>
+            <input inputmode="numeric" data-ex="${i}" data-set="${s}" data-field="reps" value="${d.reps}">
+            <button data-act="inc" data-ex="${i}" data-set="${s}" data-field="reps">+</button>
+          </div>
+          <div class="check ${d.done?'done':''}" data-act="toggle" data-ex="${i}" data-set="${s}">✓</div>
+        </div>`;
+    }
+    html += `
+        <div class="set-actions">
+          <button class="add-set-btn" data-act="add-set" data-ex="${i}">+ Add set</button>
+          ${setCount > 1 ? `<button class="rm-set-btn" data-act="rm-set" data-ex="${i}">Remove last</button>` : ''}
+        </div>`;
+    html += `</div></div>`;
+  });
+
+  html += `<div class="cooldown">
+    <div class="cooldown-title">COOL-DOWN</div>`;
+  day.cooldown.forEach((item, i) => {
+    const done = state.cooldown[i];
+    html += `<div class="cd-item ${done?'done':''}" data-act="cd-toggle" data-idx="${i}">
+      <div class="cd-check ${done?'done':''}"></div>${item}
+    </div>`;
+  });
+  html += `</div>`;
+
+  html += `<div class="reset-row"><button class="reset-btn" id="resetBtn">Clear today's numbers</button></div>`;
+
+  app.innerHTML = html;
+  attachHandlers(day);
+}
+
+function attachHandlers(day){
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => { activeDay = parseInt(t.dataset.day); render(); });
+  });
+
+  document.querySelectorAll('.stepper button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const ex = btn.dataset.ex, s = btn.dataset.set, field = btn.dataset.field;
+      const step = field === 'weight' ? 2.5 : 1;
+      let val = state[ex][s][field];
+      val = field==='weight' ? val + (btn.dataset.act==='inc'?step:-step) : val + (btn.dataset.act==='inc'?1:-1);
+      if(val < 0) val = 0;
+      state[ex][s][field] = val;
+      saveDay(activeDay, state);
+      render();
+    });
+  });
+
+  document.querySelectorAll('.stepper input').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const ex = inp.dataset.ex, s = inp.dataset.set, field = inp.dataset.field;
+      let val = parseFloat(inp.value);
+      if(isNaN(val) || val < 0) val = 0;
+      state[ex][s][field] = val;
+      saveDay(activeDay, state);
+    });
+  });
+
+  document.querySelectorAll('.check').forEach(c => {
+    c.addEventListener('click', () => {
+      const ex = c.dataset.ex, s = c.dataset.set;
+      state[ex][s].done = !state[ex][s].done;
+      saveDay(activeDay, state);
+      render();
+    });
+  });
+
+  document.querySelectorAll('.cd-item').forEach(c => {
+    c.addEventListener('click', () => {
+      const idx = c.dataset.idx;
+      state.cooldown[idx] = !state.cooldown[idx];
+      saveDay(activeDay, state);
+      render();
+    });
+  });
+
+  document.querySelectorAll('.add-set-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const ex = btn.dataset.ex;
+      const last = state[ex][state[ex].length - 1];
+      state[ex].push({weight: last ? last.weight : 0, reps: last ? last.reps : 0, done:false});
+      saveDay(activeDay, state);
+      render();
+    });
+  });
+
+  document.querySelectorAll('.rm-set-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const ex = btn.dataset.ex;
+      if(state[ex].length > 1) state[ex].pop();
+      saveDay(activeDay, state);
+      render();
+    });
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    const day = DAYS.find(d => d.id === activeDay);
+    day.exercises.forEach((ex,i) => { state[i] = emptyExerciseData(ex.sets); });
+    state.cooldown = day.cooldown.map(()=>false);
+    saveDay(activeDay, state);
+    render();
+  });
+}
+
+render();
+</script>
+</body>
+</html>
